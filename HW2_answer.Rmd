@@ -1,0 +1,81 @@
+---
+title: "P9120 HW2 answer"
+author: "Guojing Wu | UNI: gw2383"
+date: "10/14/2019"
+output:
+    pdf_document:
+    highlight: default
+    number_sections: true
+    citation_package:
+    keep_tex: false
+    fig_caption: true
+    latex_engine: pdflatex
+fontsize: 10pt
+geometry: margin=1in
+bibliography:
+biblio-style:
+header-includes:
+- \usepackage{indentfirst}
+- \usepackage{graphicx}
+- \usepackage{geometry}
+- \usepackage{subfigure}
+- \usepackage{amsmath}
+- \usepackage{listings}
+- \usepackage{tikz}
+- \usetikzlibrary{matrix}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, comment = "")
+library(tidyverse)
+options(knitr.table.format = "latex")
+theme_set(theme_bw())
+```
+
+# 1. Consider a two-class logistic regression problem with $x \in \mathbb{R}$. Characterize the maximum-likelihood estimates of the slope and intercept parameter if the sample $x_{i}$ for the two classes are separated by a point $x_{0} \in \mathbb{R}$. Generalize this result to (a) $x \in \mathbb{R}^p$ (see Figure 4.16), and (b) more than two classes.
+
+For logistic regression, the log-likelihood looks like: $l(\beta) = \sum_{i=1}^N [y_{i}(\beta_{0} + \beta_{1}x_{i}) - log(1+exp(\beta_{0} + \beta_{1}x_{i}))]$. And since the data are separated by a point $x_{0} \in \mathbb{R}$, we define:
+
+$$
+y_{i} = 
+\begin{cases}
+  0, & x_{i} \le x_{0} \\
+  1, & x_{i} > x_{0}
+\end{cases}
+$$
+Then we can rewrite the log-likelihood as: 
+
+$$
+\begin{split}
+l(\beta) &= \sum_{i=1, x_{i} \le x_{0}}^N - log(1+exp(\beta_{0} + \beta_{1}x_{i})) \\
+&+ \sum_{i=1, x_{i} > x_{0}}^N [\beta_{0} + \beta_{1}x_{i} - log(1+exp(\beta_{0} + \beta_{1}x_{i}))] \\
+&= \sum_{i=1, x_{i} \le x_{0}}^N - log(1+exp(\beta_{0} + \beta_{1}x_{0} + \beta_{1}(x_{i} - x_{0})) \\
+&+ \sum_{i=1, x_{i} > x_{0}}^N [\beta_{0} + \beta_{1}x_{0} + \beta_{1}(x_{i} - x_{0}) - log(1+exp(\beta_{0} + \beta_{1}x_{0} + \beta_{1}(x_{i} - x_{0})))] \\
+&= \sum_{i=1, x_{i} \le x_{0}}^N - log(1+exp(\beta_{1}(x_{i} - x_{0}))
++ \sum_{i=1, x_{i} > x_{0}}^N [\beta_{1}(x_{i} - x_{0}) - log(1+exp(\beta_{1}(x_{i} - x_{0})))]
+\end{split}
+$$
+
+Above we let $\beta_{0} + \beta_{1}x_{0} = 0$ to simplify the equation.
+
+For the first part of the equation $\sum_{i=1, x_{i} \le x_{0}}^N - log(1+exp(\beta_{1}(x_{i} - x_{0})) \le 0$, when $\beta_{1} \uparrow$, $exp(\beta_{1}(x_{i} - x_{0})) \downarrow$, so $- log(1+exp(\beta_{1}(x_{i} - x_{0})) \uparrow$, this part is monotone increasing along with $\beta_{1}$. For the second part, we let $f(x) = x - log(1 + e^x)$, $f'(x) = 1 - \frac{e^x}{1+e^x} = \frac{1}{1+e^x} > 0$, so the second part is also monotone increasing along with $\beta_{1}$. Hence, the solution for one dimension separable logistic regression can be characterzied by $\beta_{1} \to +\infty$ and $\beta_{0} = - \beta_{1}x_{0} \to -sign(x_{0})\infty$.
+
+## (a) 
+
+When generalize this result to $x \in \mathbb{R}^p$, all data are separated by a hyperplane $H_{\omega, b}$, the solution for p dimension separable logistic regression can be characterzied by $||\omega||_2^2 \to +\infty$.
+
+## (b) 
+
+When generalize this result to more than two classes, e.g., K classes, we then have K-1 hyperplanes $H_{\omega_{i}, b_{i}}$ that can separate all the data, the solution for K classes separable logistic regression can be characterzied by $||\omega_{i}||_2^2 \to +\infty$, for $i \in \{1, 2, ..., K-1\}$
+
+# 2. Show that the truncated power basis functions in (5.3) represent a basis for a cubic spline with the two knots as indicated.
+
+
+
+# 3. A simulation study
+
+# 4. The South African heart disease data is described on page 122 of the textbook. This data set can be found on the text book [website](https://web.stanford.edu/). Divide the dataset into a training set consisting of the first 300 observations, and a test set consisting of the remaining observations. Apply logistic regression, LDA and QDA on the training set. For each method, report the test error and its standard error over the test set. Briefly discuss your results.
+
+## Appendix
+```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
+```
