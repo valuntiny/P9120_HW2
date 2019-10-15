@@ -70,7 +70,67 @@ When generalize this result to more than two classes, e.g., K classes, we then h
 
 # 2. Show that the truncated power basis functions in (5.3) represent a basis for a cubic spline with the two knots as indicated.
 
+Based on all $h_{i}(X)$, we write $f(x) = \sum_{m=1}^6 \beta_{m}h_{m}(x)$. Then we need to show the continuity of $f(x)$, $f'(x)$ and $f''(x)$ at knots $\xi_{1}$ and $\xi_{2}$.
 
+## (a) continuity of $f(x)$
+
+left limit of $f(x)$ at $\xi_{1}$
+
+$$
+\begin{split}
+\forall h > 0 & \\
+f(\xi_{1} - h) &= \beta_{1} + \beta_{2}(\xi_{1} - h) + \beta_{3}(\xi_{1} - h)^2 + \beta_{4}(\xi_{1} - h)^3 \\
+&+ \beta_{5}(\xi_{1} - h - \xi_{1})^3_+ + \beta_{6}(\xi_{1} - h - \xi_{2})^3_+ \\
+&= \beta_{1} + \beta_{2}(\xi_{1} - h) + \beta_{3}(\xi_{1} - h)^2 + \beta_{4}(\xi_{1} - h)^3 \\
+lim_{h \to 0}f(\xi_{1} - h) &= \beta_{1} + \beta_{2}\xi_{1} + \beta_{3}\xi_{1}^2 + \beta_{4}\xi_{1}^3
+\end{split}
+$$
+
+right limit of $f(x)$ at $\xi_{1}$
+
+$$
+\begin{split}
+\forall h > 0 & \\
+f(\xi_{1} + h) &= \beta_{1} + \beta_{2}(\xi_{1} + h) + \beta_{3}(\xi_{1} + h)^2 + \beta_{4}(\xi_{1} + h)^3 \\
+&+ \beta_{5}(\xi_{1} + h - \xi_{1})^3_+ + \beta_{6}(\xi_{1} + h - \xi_{2})^3_+ \\
+&= \beta_{1} + \beta_{2}(\xi_{1} + h) + \beta_{3}(\xi_{1} + h)^2 + \beta_{4}(\xi_{1} + h)^3 + \beta_{5}h^3 + \beta_{6}(\xi_{1} + h - \xi_{2})^3_+ \\
+lim_{h \to 0}f(\xi_{1} + h) &= \beta_{1} + \beta_{2}\xi_{1} + \beta_{3}\xi_{1}^2 + \beta_{4}\xi_{1}^3
+\end{split}
+$$
+
+Left limit = right limit, so $f(x)$ is continuous at $\xi_{1}$. In a similar way we can prove that $f(x)$ is also continuous at $\xi_{2}$
+
+## (b) continuity of $f'(x)$
+
+left limit of $f'(x)$ at $\xi_{1}$
+
+$$
+\begin{split}
+f'_{-}(\xi_{1}) &= lim_{h\to 0}\frac{f(\xi_{1}) - f(\xi_{1} - h)}{h} \\
+&= lim_{h\to 0}\frac{\beta_{1} + \beta_{2}\xi_{1} + \beta_{3}\xi_{1}^2 + \beta_{4}\xi_{1}^3 - \beta_{1} - \beta_{2}(\xi_{1} - h) - \beta_{3}(\xi_{1} - h)^2 - \beta_{4}(\xi_{1} - h)^3}{h} \\
+&= lim_{h\to 0}\frac{\beta_{2}h + 2\beta_{3}\xi_{1}h + 3\beta_{4}\xi_{1}^2h + O(h^2) + O(h^3)}{h} \\
+&= \beta_{2} + 2\beta_{3}\xi_{1} + 3\beta_{4}\xi_{1}^2
+\end{split}
+$$
+
+right limit of $f'(x)$ at $\xi_{1}$
+
+$$
+\begin{split}
+f'_{+}(\xi_{1}) &= lim_{h\to 0}\frac{f(\xi_{1} + h) - f(\xi_{1})}{h} \\
+&= lim_{h\to 0}\frac{\beta_{1} + \beta_{2}(\xi_{1} + h) + \beta_{3}(\xi_{1} + h)^2 + \beta_{4}(\xi_{1} + h)^3 + \beta_{5}h^3 + \beta_{6}(\xi_{1} + h - \xi_{2})^3_+ - \beta_{1} - \beta_{2}\xi_{1} - \beta_{3}\xi_{1}^2 - \beta_{4}\xi_{1}^3}{h} \\
+&= lim_{h\to 0}\frac{\beta_{2}h + 2\beta_{3}\xi_{1}h + 3\beta_{4}\xi_{1}^2h + \beta_{6}(\xi_{1} + h - \xi_{2})^3_+ + O(h^2) + O(h^3)}{h} \\
+&= \beta_{2} + 2\beta_{3}\xi_{1} + 3\beta_{4}\xi_{1}^2
+\end{split}
+$$
+
+Left limit = right limit, so $f'(x)$ is continuous at $\xi_{1}$. In a similar way we can prove that $f'(x)$ is also continuous at $\xi_{2}$
+
+## (c) continuity of $f''(x)$
+
+In a similar way we can prove that $f''(x)$ is continuous at $\xi_{1}$ and $\xi_{2}$, $f''_{-}(\xi_{1}) = f''_{+}(\xi_{1}) = 6\beta_{4}\xi_{1}^2$.
+
+Hence we proved that power basis functions in (5.3) represent a basis for a cubic spline with the two knots.
 
 # 3. A simulation study
 
