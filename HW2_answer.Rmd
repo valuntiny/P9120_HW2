@@ -27,6 +27,9 @@ header-includes:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, comment = "")
+library(splines)
+library(MASS)  # for LDA and QDA
+library(caret)
 library(tidyverse)
 options(knitr.table.format = "latex")
 theme_set(theme_bw())
@@ -134,7 +137,162 @@ Hence we proved that power basis functions in (5.3) represent a basis for a cubi
 
 # 3. A simulation study
 
+## (a) Generate a vector *x* consisting of 50 points drawn at random from Uniform[0,1]
+
+```{r}
+# Generate vector x
+set.seed(100)
+x = runif(50, min = 0, max = 1)
+```
+
+## (b) Generate 100 training sets. Each training set consists of 50 pairs of (X, Y ), with $(X_{1}, ..., X_{50}) = \bf{x}$ and $Y_{i} = sin^3(2\pi X_{i}^3) + \epsilon_{i}$ for $i = 1, ..., 50$, where $\epsilon_{i}$ is drawn from the standard normal distribution. For each training set, do following:
+
+```{r}
+# generate Y matrix 100x50
+Y = matrix(nrow = 100, ncol = 50)
+generate <- function(y) return(sin(2 * pi * x ^ 3) ^ 3 + rnorm(50))
+Y <- t(apply(Y, 1, generate))
+
+```
+
+* Fit the data with methods/models listed below
+
+    + OLS with linear model: $\beta_{0} + \beta_{1}X$
+
+```{r}
+# fit OLS with linear model
+fit.OLS.linear <- function(y) {
+  tmp <- lm(y ~ x)
+  return(tmp$fitted.values)
+}
+predict.OLS.linear <- t(apply(Y, 1, fit.OLS.linear))
+
+```
+
+    + OLS with cubic polynomial model: $\beta_{0} + \beta_{1}X + \beta_{2}X^2 + \beta_{3}X^3$
+  
+```{r}
+# fit OLS with cubic
+fit.OLS.cubic <- function(y) {
+  tmp1 <- data.frame(x, x^2, x^3)
+  tmp2 <- lm(y ~ tmp1$x + tmp1$x.2 + tmp1$x.3)
+  return(tmp2$fitted.values)
+}
+predict.OLS.cubic <- t(apply(Y, 1, fit.OLS.cubic))
+
+```
+
+    + Cubic spline (or B-spline) with 2 knots at 0.33 and 0.66
+  
+```{r}
+# fit cubic spline with 2 knots
+fit.spline.cubic <- function(y) {
+  tmp <- lm(y ~ bs(x, knots = c(0.33, 0.66)))
+  return(tmp$fitted.values)
+}
+predict.spline.cubic <- t(apply(Y, 1, fit.spline.cubic))
+
+```
+
+    + Natural cubic spline with 5 knots at 0.1, 0.3, 0.5, 0.7, 0.9
+
+```{r}
+# fit natural cubic spline with 5 knots
+fit.ns.cubic <- function(y) {
+  tmp <- lm(y ~ ns(x, knots = c(0.1, 0.3, 0.5, 0.7, 0.9)))
+  return(tmp$fitted.values)
+}
+predict.ns.cubic <- t(apply(Y, 1, fit.ns.cubic))
+
+```
+
+    + Smoothing spline with tuning parameter chosen by GCV
+  
+```{r}
+# fit natural cubic spline with 5 knots
+fit.ss.GCV <- function(y) {
+  tmp <- smooth.spline(x = x, y = y, cv = TRUE)
+  return(predict(tmp)$y)
+}
+predict.ss.GCV <- t(apply(Y, 1, fit.ss.GCV))
+
+```
+  
+* Compute the vector of fitted value $\hat{y}$ obtained from each method/model
+
+## (c) Now for each method/model, you obtain a matrix of fitted values, with the i-th row and j-th column value $\hat{y}_{ij}$ representing the fitted value at $X = x_{i}$ from the j-th training set.
+
+## (d) For each method/model, compute the pointwise variance of fitted values across the 100 training sets. This gives you a vector of pointwise variance.
+
+```{r, dpi = 300}
+# calculate pointwise variance
+pwVar <- tibble(x = x,
+                OLS.linear = apply(predict.OLS.linear, 2, var),
+                OLS.cubic = apply(predict.OLS.cubic, 2, var),
+                Spline.cubic = apply(predict.spline.cubic, 2, var),
+                Spline.ns = apply(predict.ns.cubic, 2, var),
+                Spline.smooth = apply(predict.ss.GCV, 2, var))
+
+```
+
+# Plot the pointwise variance curves (against x) for each method/model. (Note: Your plot would be similar to Figure 5.3 of [ESL].)
+
+```{r}
+# plot
+pwVar %>% gather(OLS.linear:Spline.smooth, key = "methods", value = "variance") %>% 
+  ggplot(aes(x = x, y = variance, group = methods, col = methods)) +
+  geom_line() +
+  geom_point()
+
+```
+
 # 4. The South African heart disease data is described on page 122 of the textbook. This data set can be found on the text book [website](https://web.stanford.edu/). Divide the dataset into a training set consisting of the first 300 observations, and a test set consisting of the remaining observations. Apply logistic regression, LDA and QDA on the training set. For each method, report the test error and its standard error over the test set. Briefly discuss your results.
+
+```{r}
+# load data
+sadh.dat <- read.table("SAHD.txt", sep = ',', header = T) %>% 
+  as.tibble() %>%
+  select(-row.names) %>% 
+  mutate(chd = as.factor(chd))
+
+train.dat = sadh.dat[c(1:300),]
+test.dat = sadh.dat[c(301:nrow(sadh.dat)),] %>% select(-chd)
+test.true = sadh.dat[c(301:nrow(sadh.dat)),] %>% select(chd) %>% unlist()
+
+# fit logistic regression
+fit.logis <- glm(chd ~ ., data = train.dat, family = "binomial")
+predict.logis <- predict(fit.logis, test.dat, type = "response")
+predict.logis <- ifelse(predict.logis > 0.5, 1, 0)
+
+# fit LDA
+fit.lda <- lda(chd ~ ., data = train.dat)
+predict.lda <- predict(fit.lda, test.dat)
+
+# fit QDA
+fit.qda <- qda(chd ~ ., data = train.dat)
+predict.qda <- predict(fit.qda, test.dat)
+
+```
+
+```{r}
+# test error
+test.error <- tibble(logistic = mean(test.true != predict.logis), 
+                     LDA = mean(test.true != predict.lda$class),
+                     QDA = mean(test.true != predict.qda$class))
+test.error %>% knitr::kable()
+```
+
+From the above, we can tell that the overall error of our LDA and logistic regression models are the same, QDA is slightly higher. Generally speaking, LDA assumes that the observations are drawn from a Gaussian distribution with a common covariance matrix across each class, and so 
+
+* LDA can provide some improvements over logistic regression when this assumption holds. 
+
+* Logistic regression can outperform LDA if these Gaussian assumptions are not met
+
+Both LDA and logistic regression produce linear decision boundaries. QDA, on the other-hand, provides a non-linear quadratic decision boundary, so:
+
+* when the true decision boundaries are linear, then the LDA and logistic regression approaches will tend to perform well
+
+* when the decision boundary is moderately non-linear, QDA may give better results.
 
 ## Appendix
 ```{r, ref.label=knitr::all_labels(),echo=TRUE,eval=FALSE}
