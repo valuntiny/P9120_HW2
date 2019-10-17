@@ -3,7 +3,7 @@ title: "P9120 HW2 answer"
 author: "Guojing Wu | UNI: gw2383"
 date: "10/14/2019"
 output:
-    pdf_document:
+    md_document:
     highlight: default
     number_sections: true
     citation_package:
